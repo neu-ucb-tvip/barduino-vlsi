@@ -11,6 +11,10 @@ import freechips.rocketchip.prci.{ClockBundle, ClockBundleParameters, ClockSinkP
 import chipyard.harness.{ApplyHarnessBinders, HarnessBinders}
 import chipyard.clocking.{SimplePllConfiguration, ClockDividerN}
 import chipyard.{ChipTop}
+import baseband.{CanHavePeripheryBasebandModem, BasebandModemIntraIO}
+import chipyard.iobinders.BasebandModemAnalogPort
+
+
 
 // -------------------------------
 // Chipyard Test Harness
@@ -34,4 +38,22 @@ class TestHarness(implicit val p: Parameters) extends Module with HasHarnessInst
   def referenceReset = reset
 
   val lazyDuts = instantiateChipTops()
+ for (dut <- lazyDuts) {
+  dut match {
+    case modem: CanHavePeripheryBasebandModem =>
+      modem.bm_ios.foreach { bm =>
+        val analogIO = bm.getWrappedValue      // BasebandModemAnalogIO
+        val intraIO = analogIO.intra           // BasebandModemIntraIO inside it
+
+        intraIO.lo_div8_clock := false.B.asClock
+        intraIO.data.rx.i.data := 0.U
+        intraIO.data.rx.q.data := 0.U
+        intraIO.data.rx.i.valid := 0.U
+        intraIO.data.rx.q.valid := 0.U
+        intraIO.tuning.trim.g1 := 0.U
+      }
+    case _ => // no baseband modem
+  }
+}
+
 }

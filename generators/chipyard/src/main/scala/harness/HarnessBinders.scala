@@ -337,3 +337,24 @@ class WithResetFromHarness extends HarnessBinder({
     port.io := th.referenceReset.asAsyncReset
   }
 })
+
+
+class WithBasebandModemTiedOff extends HarnessBinder({
+  // (system: CanHavePeripheryBasebandModem, th: HasHarnessSignalReferences, ports: Seq[Data]) => {
+    case (th: HasHarnessInstantiators, port: BasebandModemAnalogPort,  chipId: Int) => {
+
+    
+    val lo_div8ClockFreqMHz: Double = 600.0
+    val lo_div8ClkBundle = th.harnessClockInstantiator.requestClockMHz("lo_div8ClkBundle", lo_div8ClockFreqMHz)
+
+    port.io.lo_div8_clock := lo_div8ClkBundle.asBool
+
+    port.io.data.rx.i.data := 0.U
+    port.io.data.rx.q.data := 0.U
+    port.io.data.rx.i.valid := 0.U
+    port.io.data.rx.q.valid := 0.U
+    port.io.tuning.trim.g1 := 0.U
+
+  }
+})
+

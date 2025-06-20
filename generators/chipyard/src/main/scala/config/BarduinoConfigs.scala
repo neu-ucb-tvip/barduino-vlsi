@@ -90,6 +90,8 @@ class BarduinoConfig extends Config(
 
   // new chipyard.clocking.WithPureIOClockSky130(freqMHz = 5) ++
   new baseband.WithBasebandModem() ++
+  new chipyard.harness.WithBasebandModemTiedOff ++
+  
 
   // SETUP RING
   new chipyard.sky130.WithSky130EFIOCells(sim = false) ++

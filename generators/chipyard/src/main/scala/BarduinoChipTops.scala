@@ -22,6 +22,9 @@ import sifive.blocks.devices.gpio._
 import sifive.blocks.devices.i2c._
 import baseband.{CanHavePeripheryBasebandModem, BasebandModemAnalogIO, BasebandModemIntraIO, BasebandModemParams}
 // import chipyard.sky130.ElaborateJSON
+
+import scala.collection.mutable.ArrayBuffer
+
 import chipyard.sky130._
 
 
@@ -170,18 +173,33 @@ class BarduinoChipTop(implicit p: Parameters) extends LazyModule
     // SCUM STUFF
     //==========================
 
-  // (system: CanHavePeripheryBasebandModem) => {
+   //(system: CanHavePeripheryBasebandModem) => {
       // Create a *new* top-level IO specifically for the ChipTop connection
-    val chiptop_clock_port = IO(Input(Clock())).suggestName("bm_clock_in")
 
-    val clockPort = if (system.analog_bm_clock_pin != null) {
-       system.analog_bm_clock_pin := chiptop_clock_port // Drive internal pin from ChipTop port
-       // Return a ClockPort referencing the NEW ChipTop-visible port
-       Seq(ClockPort(() => chiptop_clock_port, freqMHz = 32.0)) // Set your desired frequency
-    } else {
-       chiptop_clock_port := false.B.asClock // Tie off if not used
-       Nil
+      //comment this out for Barduino
+    // val chiptop_clock_port = IO(Input(Clock())).suggestName("bm_clock_in")
+
+    // val clockPort = if (system.analog_bm_clock_pin != null) {
+    //    system.analog_bm_clock_pin := chiptop_clock_port // Drive internal pin from ChipTop port
+    //    // Return a ClockPort referencing the NEW ChipTop-visible port
+    //    Seq(ClockPort(() => chiptop_clock_port, freqMHz = 32.0)) // Set your desired frequency
+    // } else {
+    //    chiptop_clock_port := false.B.asClock // Tie off if not used
+    //    Nil
+    // }
+
+    // Use a dedicated internal wire to drive the baseband modem's clock.
+    // For now, we just tie it to the system clock 
+    val modem_clk_wire = Wire(Clock())
+    modem_clk_wire := clock_wire  // Or use pllClockSource.out.head._1.clock for PLL-driven
+
+    // Assign the internal modem clock pin (no external IO anymore)
+    if (system.analog_bm_clock_pin != null) {
+      system.analog_bm_clock_pin := modem_clk_wire
     }
+
+
+
 
     val (bmPorts, cells) = system.bm_ios.map { a =>
       // Create the IO bundle that this Port will return

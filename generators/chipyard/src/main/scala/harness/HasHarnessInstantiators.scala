@@ -85,6 +85,8 @@ trait HasHarnessInstantiators {
       LazyModule(q(BuildTop)(q)).suggestName(s"chiptop$i")
     }
     val duts = lazyDuts.map(l => Module(l.module))
+    
+
 
     withClockAndReset (harnessBinderClock, harnessBinderReset) {
       lazyDuts.zipWithIndex.foreach {
